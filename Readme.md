@@ -1,21 +1,40 @@
+# Strimzi Kafka & Jaeger tracing first steps
+
+Below you'll find instructions to start playing around with a Kafka cluster deployed on Kubernets, by using _Strimzi_ operator.  
+On top of that we'll use Jaeger to create&display tracing info. Those tracing information is created with producers, consumers and streams applications.  
+As underlying Kubernetes cluster, we'll use GKE, but you can use whichever K8s flavour you prefer.  
+
+- [Strimzi Kafka & Jaeger tracing first steps](#strimzi-kafka--jaeger-tracing-first-steps)
+  - [base GCP setup](#base-gcp-setup)
+  - [create GKE cluster](#create-gke-cluster)
+  - [deploy Strimzi operator](#deploy-strimzi-operator)
+    - [preparations](#preparations)
+    - [Set namespace for the operator](#set-namespace-for-the-operator)
+    - [Set namespace & additional rolebindings for Kafka cluster](#set-namespace--additional-rolebindings-for-kafka-cluster)
+    - [finally deploy the Strimzi operator](#finally-deploy-the-strimzi-operator)
+  - [Deploy Kafka cluster](#deploy-kafka-cluster)
+  - [Creating a topic](#creating-a-topic)
+  - [Producing/Consuming messages](#producingconsuming-messages)
+  - [Jager](#jager)
+    - [Deploying Jager core components](#deploying-jager-core-components)
+    - [Accessing the Jaeger UI](#accessing-the-jaeger-ui)
+  - [Tracing in Action](#tracing-in-action)
+
 ## base GCP setup
+
 - create new project within GCP console, name: strimzi-and-jaeger-eval
-- create new configuration for gcloud cli
-  ```gcloud config configuration create strimzi-jaeger```
-- set project
-  ```gcloud config set project strimzi-and-jaeger-eval
-- authenticate with your Google account
-  ```gcloud auth login```
+- create new configuration for gcloud cli: ```gcloud config configuration create strimzi-jaeger```
+- set project: ```gcloud config set project strimzi-and-jaeger-eval```
+- authenticate with your Google account: ```gcloud auth login```
 
 ## create GKE cluster
 
-For this playground let's create a single-zone cluster, consisting of 3 nodes
+For this playground let's create a single-zone cluster, consisting of 2 nodes.
 
 ```bash
 gcloud container clusters create strimzi-jaeger-eval \
-  --num-nodes=3 \
-  --zone=europe-central2-a \
-  --labels=requestor=gerd-koenig,customer=scigility,project=evaluation
+  --num-nodes=2 \
+  --zone=europe-central2-a 
 ```
 
 ## deploy Strimzi operator
@@ -25,6 +44,7 @@ Alternative would be to install Strimzi operator via Helm.
 The operator will be installed into namespace _kafka-op_ and the Kafka cluster itself into namespace _kafka-cluster_.
 
 ### preparations
+
 ```bash
 kubectl create ns kafka-op
 kubectl create ns kafka-cluster
