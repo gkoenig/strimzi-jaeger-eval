@@ -1,0 +1,19 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: my-topic
+  labels:
+      strimzi.io/cluster: strimzi-cluster
+spec:
+  replicas: 3
+  partitions: 12
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: my-topic-reversed
+  labels:
+    strimzi.io/cluster: strimzi-cluster
+spec:
+  replicas: 3
+  partitions: 12
