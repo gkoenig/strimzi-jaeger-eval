@@ -20,6 +20,8 @@ I will also show you how to apply **GitOps** approach of bringing applications/c
     - [Deploying Jager core components](#deploying-jager-core-components)
     - [Accessing the Jaeger UI](#accessing-the-jaeger-ui)
   - [First tracing in action](#first-tracing-in-action)
+    - [Manual approach, executing _kubectl_](#manual-approach-executing-kubectl)
+    - [GitOps approach](#gitops-approach)
   - [Kafka Connect](#kafka-connect)
     - [Deploy&prepare Postgresql](#deployprepare-postgresql)
       - [Postgresql deployment](#postgresql-deployment)
@@ -195,10 +197,32 @@ Now open a browser and navigate to ```http://localhost:8080```
 
 Let's deploy a sample application, consisting of a producer, consumer and a Kafka-streams application in between.
 
+Let's distinguish also here between the manual approach and the GitOps approach.
+
+### Manual approach, executing _kubectl_
+
 - create two topics: ```kubectl apply -f ./jaeger-example/1-topics.yaml```
 - create Producer: ```kubectl apply -f ./jaeger-example/2-producer.yaml```
 - create Streams app: ```kubectl apply -f ./jaeger-example/3-kafka-streams.yaml```
 - create Consumer: ```kubectl apply -f ./jaeger-example/4-consumer.yaml```
+
+### GitOps approach
+
+This option requires that you finished the Flux setup & config as described in the chapter about [deploying Kafka cluster](#deploy-kafka-cluster) the GitOps way. Means, you should have your Git repo _flux-kafka-demo_ already cloned to your workstation.  
+The only thing we have to do, is to register a new "app" in Flux, to observe and apply the subfolder **jaeger-example** of our base Git repo _strimzi-jaeger-eval_.  
+
+1. open a terminal and ensure you are within the directory of repo _flux-kafka-demo_
+2. register the "jaeger-example" in Flux
+
+  ```bash
+  flux create kustomization jaeger-example \
+  --source=strimzi-jaeger-eval \
+  --path="./jaeger-example" \
+  --prune=true \
+  --validation=client \
+  --interval=5m \
+  --export > ./my-flux/jaeger-example-kustomization.yaml
+  ```
 
 ## Kafka Connect
 
