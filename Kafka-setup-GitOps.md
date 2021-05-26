@@ -163,11 +163,19 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
    - check topics, since we also have a yaml spec defining our topic(s)
 
     Within file kafka-setup/topics.yaml we specified that we want to have a topic called "my-first-topic". Let's see if it is there:
-    
+
     ```bash
     kubectl run kafka-producer -ti \
     --image=strimzi/kafka:0.20.0-rc1-kafka-2.6.0 \
     --rm=true \
     --restart=Never \
-    -- bin/kafka-topics.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list
+    -- bin/kafka-topics.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list | grep "my-"
     ```
+
+    provides the output:
+
+    ```bash
+    If you don't see a command prompt, try pressing enter.
+    my-first-topic
+    ```
+

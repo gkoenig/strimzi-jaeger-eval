@@ -4,6 +4,8 @@ Below you'll find instructions to start playing around with a Kafka cluster depl
 On top of that we'll use Jaeger to create&display tracing info. Those tracing information is created with producers, consumers and streams applications.  
 As underlying Kubernetes cluster, we'll use GKE, but you can use whichever K8s flavour you prefer.  
 
+I will also show you how to apply **GitOps** approach of bringing applications/configuration to your K8s cluster by using [Flux v2](https://fluxcd.io/) to setup Kafka and Topics. You will find the step-by-step instructions in the section about [deploying Kafka cluster](#deploy-kafka-cluster)
+
 - [Strimzi Kafka & Jaeger tracing first steps](#strimzi-kafka--jaeger-tracing-first-steps)
   - [base GCP setup](#base-gcp-setup)
   - [create GKE cluster](#create-gke-cluster)
