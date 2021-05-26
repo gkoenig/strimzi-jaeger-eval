@@ -2,6 +2,7 @@ apiVersion: kafka.strimzi.io/v1beta1
 kind: KafkaTopic
 metadata:
   name: my-first-topic
+  namespace: kafka-cluster
   labels:
     strimzi.io/cluster: strimzi-cluster
 spec:
