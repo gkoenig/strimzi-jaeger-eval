@@ -13,7 +13,6 @@ As underlying Kubernetes cluster, we'll use GKE, but you can use whichever K8s f
     - [Set namespace & additional rolebindings for Kafka cluster](#set-namespace--additional-rolebindings-for-kafka-cluster)
     - [finally deploy the Strimzi operator](#finally-deploy-the-strimzi-operator)
   - [Deploy Kafka cluster](#deploy-kafka-cluster)
-  - [Creating a topic](#creating-a-topic)
   - [Producing/Consuming messages](#producingconsuming-messages)
   - [Jager](#jager)
     - [Deploying Jager core components](#deploying-jager-core-components)
@@ -91,90 +90,24 @@ kubectl apply -f install/cluster-operator -n kafka-op
 kubectl create -f install/cluster-operator/040-Crd-kafka.yaml # because this file is too large for kubectl apply ...
 ```
 
-...and verify it: ```kubectl get deployments -n kafka-op```
+...and verify it: ```kubectl get deployments -n kafka-op```  
+until you see the deployment up and running, like e.g.:
+
+```bash
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+strimzi-cluster-operator   1/1     1            1           51s
+```
 
 ## Deploy Kafka cluster
 
-You'll find sample .yaml files in examples/kafka folder. Based on file kafka-persistent.yaml we are creating a specification for our test cluster, as shown below:
+Next, let's setup a 3-node Kafka cluster with a single-node Zookeeper. Kafka will be reachable via port 9092 without authentication and encryption, as well as on port 9093 tls encrypted. Additionally we have an external facing listener on port 9094, which is created via a NodePort service. 
 
-```
-apiVersion: kafka.strimzi.io/v1beta2
-kind: Kafka
-metadata:
-  name: strimzi-cluster
-spec:
-  kafka:
-    version: 2.7.0
-    replicas: 3
-    listeners:
-      - name: plain
-        port: 9092
-        type: internal
-        tls: false
-      - name: tls
-        port: 9093
-        type: internal
-        tls: true
-      - name: external
-        port: 9094
-        type: nodeport
-        tls: false
-    config:
-      offsets.topic.replication.factor: 3
-      transaction.state.log.replication.factor: 3
-      transaction.state.log.min.isr: 2
-      log.message.format.version: "2.7"
-      inter.broker.protocol.version: "2.7"
-    storage:
-      type: persistent-claim
-      size: 5Gi
-      deleteClaim: false
-    logging:
-      type: inline
-      loggers:
-        kafka.root.logger.level: "INFO"    
-  zookeeper:
-    replicas: 1
-    storage:
-      type: persistent-claim
-      size: 5Gi
-      deleteClaim: false
-  entityOperator:
-    topicOperator: {}
-    userOperator: {}
+To actually deploying the Kafka cluster I'll provide two different approaches. One is applying the plain yaml manifests by executing _kubectl_ commands, and the other approach is to use GitOps-tool Flux, so that Kafka specs are being applied to the K8s cluster as soon as you push them to Git.
 
-```
-This will setup a 3-node Kafka cluster with a single-node Zookeeper. Kafka will be reachable via port 9092 without authentication and encryption, as well as on port 9093 tls encrypted. Additionally we have an external facing listener on port 9094, which is created via a NodePort service. 
+- [manual kafka setup](./Kafka-setup-manual.md) by running _kubectl_ commands
+- [kafka setup, the GitOps way](./Kafka-setup-GitOps.md) by using Flux
 
-Save above file as kafka-deployment.yaml and create the cluster in our desired namespace:  
-```bash
-kubectl apply -f kafka-deployment.yaml -n kafka-cluster
-```
-
-Check: ```kubectl get all -n kafka-cluster```
-
-## Creating a topic
-
-Now that Kafka is up and running, let's create a topic by using the TopicOperator
-
-```bash
-cat <<EOF | kubectl apply -n kafka-cluster -f -
-apiVersion: kafka.strimzi.io/v1beta1
-kind: KafkaTopic
-metadata:
-  name: my-first-topic
-  labels:
-    strimzi.io/cluster: strimzi-cluster
-spec:
-  partitions: 3
-  replicas: 2
-  config:
-    retention.ms: 7200000
-    segment.bytes: 1073741824
-EOF
-```
-
-List the available topics:
+If you are done with setting up Kafka, you can list the available topics:
 
 ```bash
 kubectl run kafka-producer -ti \
