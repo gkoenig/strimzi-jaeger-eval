@@ -32,7 +32,7 @@ spec:
             - name: JAEGER_SERVICE_NAME
               value: java-kafka-streams
             - name: JAEGER_AGENT_HOST
-              value: my-jaeger-agent
+              value: my-jaeger-agent.default
             - name: JAEGER_SAMPLER_TYPE
               value: const
             - name: JAEGER_SAMPLER_PARAM
