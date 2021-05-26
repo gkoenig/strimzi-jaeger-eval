@@ -35,12 +35,13 @@ As underlying Kubernetes cluster, we'll use GKE, but you can use whichever K8s f
 
 ## create GKE cluster
 
-For this playground let's create a single-zone cluster, consisting of 2 nodes.
+For this playground let's create a single-zone cluster, consisting of 2 nodes. Please adjust the _machine-type_ according to your needs, the "e2-standard-2" ships with 2CPUs and 8GB Ram.
 
 ```bash
 gcloud container clusters create strimzi-jaeger-eval \
   --num-nodes=2 \
-  --zone=europe-central2-a 
+  --zone=europe-central2-a \
+  --machine-type=e2-standard-2
 ```
 
 ## deploy Strimzi operator
