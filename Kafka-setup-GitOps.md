@@ -172,7 +172,7 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     -- bin/kafka-topics.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list | grep "my-"
     ```
 
-    provides the output:
+    provides the (expected) output of exactly one topic, "my-first-topic":
 
     ```bash
     If you don't see a command prompt, try pressing enter.

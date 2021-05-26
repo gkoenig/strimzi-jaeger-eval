@@ -127,7 +127,7 @@ Start a Producer:
 kubectl run kafka-producer -ti \
   --image=strimzi/kafka:latest-kafka-2.4.0 \
   --rm=true --restart=Never \
-  -- bin/kafka-console-producer.sh --broker-list strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --topic my-topic
+  -- bin/kafka-console-producer.sh --broker-list strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --topic my-first-topic
 ```
 
 and in another terminal, start a Consumer:
