@@ -21,6 +21,13 @@ data:
   POSTGRES_DB: demodb
   POSTGRES_USER: dbuser
   POSTGRES_PASSWORD: dbpasswd
+  postgresql.conf: |
+    wal_level = logical             
+    max_wal_senders = 1             
+    max_replication_slots = 1
+    listen_addresses = '*'
+  pg_hba.conf: |
+    host all all 10.0.0.0/8 trust
 ---  
 apiVersion: apps/v1
 kind: Deployment
@@ -56,10 +63,24 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: postgredb
+        - name: pg-config
+          mountPath: /var/lib/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: pg-config
+          mountPath: /var/lib/postgresql/pg_hba.conf
+          subPath: pg_hba.conf
+        args:
+          - "-c"
+          - "config_file=/var/lib/postgresql/postgresql.conf"
+          #- "-c"
+          #- "hba_file=/var/lib/postgresql/pg_hba.conf"
       volumes:
       - name: postgredb
         persistentVolumeClaim:
           claimName: postgres-pvc
+      - name: pg-config
+        configMap:
+          name: postgres-configuration
 ---
 apiVersion: v1
 kind: Service
