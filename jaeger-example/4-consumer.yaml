@@ -4,6 +4,7 @@ metadata:
   labels:
     app: java-kafka-consumer
   name: java-kafka-consumer
+  namespace: kafka-cluster
 spec:
   replicas: 1
   selector:

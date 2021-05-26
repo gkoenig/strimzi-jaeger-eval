@@ -2,6 +2,7 @@ apiVersion: kafka.strimzi.io/v1beta1
 kind: KafkaTopic
 metadata:
   name: my-topic
+  namespace: kafka-cluster
   labels:
       strimzi.io/cluster: strimzi-cluster
 spec:
@@ -12,6 +13,7 @@ apiVersion: kafka.strimzi.io/v1beta1
 kind: KafkaTopic
 metadata:
   name: my-topic-reversed
+  namespace: kafka-cluster
   labels:
     strimzi.io/cluster: strimzi-cluster
 spec:

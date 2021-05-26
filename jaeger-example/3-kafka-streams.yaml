@@ -4,6 +4,7 @@ metadata:
   labels:
     app: java-kafka-streams
   name: java-kafka-streams
+  namespace: kafka-cluster
 spec:
   replicas: 1
   selector:

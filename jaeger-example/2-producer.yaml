@@ -4,6 +4,7 @@ metadata:
   labels:
     app: java-kafka-producer
   name: java-kafka-producer
+  namespace: kafka-cluster
 spec:
   replicas: 1
   selector:
