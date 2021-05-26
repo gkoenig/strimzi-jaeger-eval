@@ -212,7 +212,7 @@ This option requires that you finished the Flux setup & config as described in t
 The only thing we have to do, is to register a new "app" in Flux, to observe and apply the subfolder **jaeger-example** of our base Git repo _strimzi-jaeger-eval_.  
 
 1. open a terminal and ensure you are within the directory of repo _flux-kafka-demo_
-2. register the "jaeger-example" in Flux
+2. register the "jaeger-example" in Flux and push the change
 
   ```bash
   flux create kustomization jaeger-example \
@@ -222,7 +222,35 @@ The only thing we have to do, is to register a new "app" in Flux, to observe and
   --validation=client \
   --interval=5m \
   --export > ./my-flux/jaeger-example-kustomization.yaml
+  
+  # now push the change to Git and let the resources being created
+  git add -A && git commit -m "created Kustomization for Jaeger demo"
+  git push
   ```
+
+3. check what Flux is doing
+
+  ```bash
+  watch flux get kustomizations
+  ```
+
+  Wait a minute, or two ..... until you see the "jaeger-example" in state _READY_ :
+
+  ```bash
+  NAME                    READY   MESSAGE                                                         REVISION                                        SUSPENDED
+  flux-system             True    Applied revision: main/488748d800d3f5dc03daf23b1b5f87a8d239f195 main/488748d800d3f5dc03daf23b1b5f87a8d239f195   False
+  jaeger-example          True    Applied revision: main/b34f21917de4d392a9ff4b84b1bc88d152e44e23 main/b34f21917de4d392a9ff4b84b1bc88d152e44e23   False
+  strimzi-jaeger-eval     True    Applied revision: main/b34f21917de4d392a9ff4b84b1bc88d152e44e23 main/b34f21917de4d392a9ff4b84b1bc88d152e44e23   False
+  ```
+
+If you now check the Jaeger UI, searching for service "java-kafka-producer" and click on "Show traces", you'll see a list of traces which have been generated.
+
+![search for Traces](./images/search-traces.png)
+
+You can click on one of those traces to further dive into the details, e.g.:
+![show trace details](./images/trace-details.png)
+
+
 
 ## Kafka Connect
 
