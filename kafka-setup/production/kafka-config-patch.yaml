@@ -4,7 +4,7 @@ metadata:
   name: strimzi-cluster
 spec:
   kafka:
-    replicas: 3
+    replicas: 5
     config:
       offsets.topic.replication.factor: 2
       transaction.state.log.replication.factor: 2
