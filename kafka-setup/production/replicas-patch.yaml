@@ -4,4 +4,4 @@ metadata:
   name: strimzi-cluster
 spec:
   kafka:
-    replicas: 5
+    replicas: 3
