@@ -74,11 +74,22 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
 
     ```bash
     cd flux-kafka-demo \
+    ```
+
+    ```bash
     flux create source git strimzi-jaeger-eval \
     --url=https://github.com/gkoenig/strimzi-jaeger-eval \
     --branch=main \
     --interval=30s \
     --export > ./my-flux/strimzi-jaeger-eval-source.yaml
+    ```
+
+    ```bash
+    flux create source git strimzi-jaeger-eval-testing \
+    --url=https://github.com/gkoenig/strimzi-jaeger-eval \
+    --branch=testing \
+    --interval=30s \
+    --export > ./my-flux/strimzi-jaeger-eval-testing-branch-source.yaml
     ```
 
 4. commit and push the -source.yaml
@@ -99,6 +110,16 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     --interval=5m \
     --export > ./my-flux/strimzi-jaeger-eval-kustomization.yaml
     ```
+  
+    ```bash
+    flux create kustomization strimzi-jaeger-eval-testing-kustomization \
+    --source=strimzi-jaeger-eval-testing \
+    --path="./kafka-setup/testing" \
+    --prune=true \
+    --validation=client \
+    --interval=5m \
+    --export > ./my-flux/strimzi-jaeger-eval-testing-kustomization.yaml
+    ```
 
     Your directory layout should like the following:
 
@@ -110,6 +131,7 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
         │   ├── gotk-sync.yaml
         │   └── kustomization.yaml
         ├── strimzi-jaeger-eval-kustomization.yaml
+        ├── strimzi-jaeger-eval-testing-branch-source.yaml
         └── strimzi-jaeger-eval-source.yaml
 
     2 directories, 5 files
