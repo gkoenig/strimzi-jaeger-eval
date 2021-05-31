@@ -87,14 +87,6 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     ```
 
     ```bash
-    flux create source git strimzi-jaeger-eval-testing \
-    --url=https://github.com/$GITHUB_USER/strimzi-jaeger-eval \
-    --branch=testing \
-    --interval=30s \
-    --export > ./my-flux/strimzi-jaeger-eval-testing-branch-source.yaml
-    ```
-
-    ```bash
     flux create source git strimzi-jaeger-eval-main \
     --url=https://github.com/$GITHUB_USER/strimzi-jaeger-eval \
     --branch=main \
@@ -113,7 +105,7 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
   
     ```bash
     flux create kustomization strimzi-jaeger-eval-prod-kustomization \
-    --source=strimzi-jaeger-eval-testing \
+    --source=strimzi-jaeger-eval-main \
     --path="./kafka-setup/production" \
     --prune=true \
     --validation=client \
@@ -123,7 +115,7 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
   
     ```bash
     flux create kustomization strimzi-jaeger-eval-testing-kustomization \
-    --source=strimzi-jaeger-eval-testing \
+    --source=strimzi-jaeger-eval-main \
     --path="./kafka-setup/testing" \
     --prune=true \
     --validation=client \
@@ -142,10 +134,7 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
         │   └── kustomization.yaml
         ├── strimzi-jaeger-eval-testing-kustomization.yaml
         ├── strimzi-jaeger-eval-prod-kustomization.yaml
-        ├── strimzi-jaeger-eval-testing-branch-source.yaml
-        └── strimzi-jaeger-eval-source.yaml
-
-    2 directories, 5 files
+        └── strimzi-jaeger-eval-main-branch-source.yaml
     ```
 
 6. commit and push the -source.yaml
@@ -176,27 +165,34 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
 
    - Kafka and Zookeeper resources
 
+    wait a couple of minutes....and amazingly, you'll see that they got created, e.g. our "production" cluster in namespace "kafka-cluster":
+
     ```bash
-    kubectl get deployments,service -n kafka-cluster
+    kubectl get po,service -n kafka-cluster
     ```
 
-    and amazingly, you'll see that they got created
-
     ```bash
+    NAME                                                        READY   STATUS    RESTARTS   AGE
+    pod/prod-strimzi-cluster-entity-operator-76c8846964-gfrrw   3/3     Running   0          61s
+    pod/prod-strimzi-cluster-kafka-0                            1/1     Running   0          2m9s
+    pod/prod-strimzi-cluster-kafka-1                            1/1     Running   0          2m8s
+    pod/prod-strimzi-cluster-kafka-2                            1/1     Running   0          2m8s
+    pod/prod-strimzi-cluster-zookeeper-0                        1/1     Running   0          2m45s
+
     NAME                                                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
-    service/prod-strimzi-cluster-kafka-0                    NodePort    10.3.241.135   <none>        9094:31824/TCP               77s
-    service/prod-strimzi-cluster-kafka-1                    NodePort    10.3.255.134   <none>        9094:31819/TCP               78s
-    service/prod-strimzi-cluster-kafka-2                    NodePort    10.3.240.71    <none>        9094:31594/TCP               77s
-    service/prod-strimzi-cluster-kafka-bootstrap            ClusterIP   10.3.250.224   <none>        9091/TCP,9092/TCP,9093/TCP   78s
-    service/prod-strimzi-cluster-kafka-brokers              ClusterIP   None           <none>        9091/TCP,9092/TCP,9093/TCP   78s
-    service/prod-strimzi-cluster-kafka-external-bootstrap   NodePort    10.3.251.170   <none>        9094:31433/TCP               77s
-    service/prod-strimzi-cluster-zookeeper-client           ClusterIP   10.3.243.23    <none>        2181/TCP                     2m19s
-    service/prod-strimzi-cluster-zookeeper-nodes            ClusterIP   None           <none>        2181/TCP,2888/TCP,3888/TCP   2m19s
+    service/prod-strimzi-cluster-kafka-0                    NodePort    10.3.252.18    <none>        9094:31624/TCP               2m9s
+    service/prod-strimzi-cluster-kafka-1                    NodePort    10.3.247.117   <none>        9094:31934/TCP               2m9s
+    service/prod-strimzi-cluster-kafka-2                    NodePort    10.3.245.166   <none>        9094:30962/TCP               2m9s
+    service/prod-strimzi-cluster-kafka-bootstrap            ClusterIP   10.3.240.112   <none>        9091/TCP,9092/TCP,9093/TCP   2m9s
+    service/prod-strimzi-cluster-kafka-brokers              ClusterIP   None           <none>        9091/TCP,9092/TCP,9093/TCP   2m9s
+    service/prod-strimzi-cluster-kafka-external-bootstrap   NodePort    10.3.253.193   <none>        9094:32689/TCP               2m9s
+    service/prod-strimzi-cluster-zookeeper-client           ClusterIP   10.3.254.43    <none>        2181/TCP                     2m46s
+    service/prod-strimzi-cluster-zookeeper-nodes            ClusterIP   None           <none>        2181/TCP,2888/TCP,3888/TCP   2m46s
     ```
 
    - check topics, since we also have a yaml spec defining our topic(s)
 
-    Within file kafka-setup/topics.yaml we specified that we want to have a topic called "my-first-topic". Let's see if it is there:
+    Within file kafka-setup/base/topics.yaml we specified that we want to have a topic called "my-first-topic". Let's see if it is there:
 
     ```bash
     kubectl run kafka-producer -ti \

@@ -58,6 +58,7 @@ The operator will be installed into namespace _kafka-op_ and the Kafka cluster i
 ```bash
 kubectl create ns kafka-op
 kubectl create ns kafka-cluster
+kubectl create ns testing
 wget https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.22.1/strimzi-0.22.1.tar.gz
 tar -xvzf strimzi-0.22.1.tar.gz
 cd strimzi-0.22.1
@@ -76,15 +77,19 @@ Open file 060-Deployment-strimzi-cluster-operator.yaml (under install/cluster-op
 ```bash
           env:
             - name: STRIMZI_NAMESPACE
-              value: kafka-cluster
+              value: kafka-cluster,testing
 ```
 
-Create rolebindings for our desired namespace:
+Create rolebindings for our desired namespaces, _kafka-cluster_ and _testing_:
 
 ```bash
 kubectl apply -f install/cluster-operator/020-RoleBinding-strimzi-cluster-operator.yaml -n kafka-cluster
 kubectl apply -f install/cluster-operator/031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml -n kafka-cluster
 kubectl apply -f install/cluster-operator/032-RoleBinding-strimzi-cluster-operator-topic-operator-delegation.yaml -n kafka-cluster
+
+kubectl apply -f install/cluster-operator/020-RoleBinding-strimzi-cluster-operator.yaml -n testing
+kubectl apply -f install/cluster-operator/031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml -n testing
+kubectl apply -f install/cluster-operator/032-RoleBinding-strimzi-cluster-operator-topic-operator-delegation.yaml -n testing
 ```
 
 ### finally deploy the Strimzi operator
@@ -111,14 +116,23 @@ To actually deploying the Kafka cluster I'll provide two different approaches. O
 - [manual kafka setup](./Kafka-setup-manual.md) by running _kubectl_ commands
 - [kafka setup, the GitOps way](./Kafka-setup-GitOps.md) by using Flux
 
-If you are done with setting up Kafka, you can list the available topics:
+If you are done with setting up Kafka, you can list the available topics.  
+The property _--bootstrap-server_ you have to set, according to the cluster you want to connect to, and it needs to resolve a service name in your desired namespace. To list those services, just run:
+
+```bash
+# for the 'prod' cluster:
+kubectl get svc -n kafka-cluster | grep kafka-bootstrap
+# for the 'testing' cluster:
+kubectl get svc -n testing | grep kafka-bootstrap
+```
+then take this service name + namespace to create the value for _--bootstrap-server_ property, in the form of \<servicename\>.\<namespace\>:9092 (because we want to quickly test via the unathenticated port 9092)  
 
 ```bash
 kubectl run kafka-producer -ti \
     --image=strimzi/kafka:0.20.0-rc1-kafka-2.6.0 \
     --rm=true \
     --restart=Never \
-    -- bin/kafka-topics.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list
+    -- bin/kafka-topics.sh --bootstrap-server <servicename>.<namespace>:9092 --list
 ```
 
 ## Producing/Consuming messages
@@ -129,7 +143,7 @@ Start a Producer:
 kubectl run kafka-producer -ti \
   --image=strimzi/kafka:latest-kafka-2.4.0 \
   --rm=true --restart=Never \
-  -- bin/kafka-console-producer.sh --broker-list strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --topic my-first-topic
+  -- bin/kafka-console-producer.sh --broker-list <servicename>.<namespace>:9092 --topic my-first-topic
 ```
 
 and in another terminal, start a Consumer:
@@ -138,7 +152,7 @@ and in another terminal, start a Consumer:
 kubectl run kafka-consumer -ti \
   --image=strimzi/kafka:latest-kafka-2.4.0 \
   --rm=true --restart=Never \
-  -- bin/kafka-console-consumer.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --topic my-first-topic --from-beginning
+  -- bin/kafka-console-consumer.sh --bootstrap-server <servicename>.<namespace>:9092 --topic my-first-topic --from-beginning
 ```
 
 ## Jager
