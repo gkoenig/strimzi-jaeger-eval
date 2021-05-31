@@ -6,6 +6,15 @@ Below you'll find the steps to deploy our Kafka cluster (and creation of a topic
 Since Flux creates a Git repo on bootstrapping, you need a _personal access token_ for GitHub (because I am using GitHub, but GitLab is also possible), so that Flux is able to authentiacate and create a repository (check all permissions under _repo_) ==> please find [instructions to create access token here](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).  
 Within the [Flux Docu](https://fluxcd.io/docs) you'll find very good explanations for starting as well as enhanced aspects of using Flux !!
 
+**Goal**
+Below steps are demoing a scenario where you can deploy Kafka cluster in two different stages, "testing" and "production". Both stages are separated by putting them into different namespaces. Via _kustomize_ you can configure both stages independant via their corresponding directories, and Flux is observing those directories.  
+The base configuration for the Kafka cluster is in folder _strimzi-jaeger-eval/kafka-setup/base_ and as an example for how to set properties per stage, you'll find *-patch.yml files in the production subdir for setting a higher number of brokers and zookeeper servers in production environment.
+
+|cluster stage|namespace|kustomize dir|
+|---|---|---|
+|testing|testing|strimzi-jaeger-eval/kafka-setup/testing|
+|production|kafka-cluster|strimzi-jaeger-eval/kafka-setup/production|
+
 1. export your GitHub data
 
    ```bash
@@ -70,15 +79,16 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
 2. clone **your** Flux Github repo: ```git clone https://github.com/$GITHUB_USER/flux-kafka-demo.git```
 3. create a manifest, pointing to **your** strimzi-jaeger-eval repository (since this is the one we want to be observed ;)
   
-    > replace "\<your-github-user\>" with your GitHub username first
+    > ensure the export of env variable GITHUB_USER with your GitHub username is in place !
 
     ```bash
+    export GITHUB_USER=\<your-github-username\>
     cd flux-kafka-demo \
     ```
 
     ```bash
     flux create source git strimzi-jaeger-eval-testing \
-    --url=https://github.com/gkoenig/strimzi-jaeger-eval \
+    --url=https://github.com/$GITHUB_USER/strimzi-jaeger-eval \
     --branch=testing \
     --interval=30s \
     --export > ./my-flux/strimzi-jaeger-eval-testing-branch-source.yaml
@@ -86,7 +96,7 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
 
     ```bash
     flux create source git strimzi-jaeger-eval-main \
-    --url=https://github.com/gkoenig/strimzi-jaeger-eval \
+    --url=https://github.com/$GITHUB_USER/strimzi-jaeger-eval \
     --branch=main \
     --interval=30s \
     --export > ./my-flux/strimzi-jaeger-eval-main-branch-source.yaml
@@ -156,9 +166,10 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     until you see something like:
   
     ```bash
-    NAME                    READY   MESSAGE                                                         REVISION                                        SUSPENDED
-    flux-system             True    Applied revision: main/80655111cfe968f1bf37c1e9a8e639af7c1fb2eb main/80655111cfe968f1bf37c1e9a8e639af7c1fb2eb   False
-    strimzi-jaeger-eval     True    Applied revision: main/7b83b08a58ec359accd9001ea66d28f112f52a5c main/7b83b08a58ec359accd9001ea66d28f112f52a5c   False
+    NAME                                       READY   MESSAGE                                                         REVISION
+    flux-system                                True    Applied revision: main/80655111cfe968f1bf37c1e9a8e639af7c1fb2eb main/80655111cfe968f1bf37c1e9a8e639af7c1fb2eb
+    strimzi-jaeger-eval-prod-kustomization     True    Applied revision: main/7b83b08a58ec359accd9001ea66d28f112f52a5c main/7b83b08a58ec359accd9001ea66d28f112f52a5c
+    strimzi-jaeger-eval-testing-kustomization  True    Applied revision: main/7b83b08a58ec359accd9001ea66d28f112f52a5c main/7b83b08a58ec359accd9001ea66d28f112f52a5c
     ```
 
     ! of course, the commit hash will be different !
@@ -172,15 +183,15 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     and amazingly, you'll see that they got created
 
     ```bash
-    NAME                                               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
-    service/strimzi-cluster-kafka-0                    NodePort    10.3.241.135   <none>        9094:31824/TCP               77s
-    service/strimzi-cluster-kafka-1                    NodePort    10.3.255.134   <none>        9094:31819/TCP               78s
-    service/strimzi-cluster-kafka-2                    NodePort    10.3.240.71    <none>        9094:31594/TCP               77s
-    service/strimzi-cluster-kafka-bootstrap            ClusterIP   10.3.250.224   <none>        9091/TCP,9092/TCP,9093/TCP   78s
-    service/strimzi-cluster-kafka-brokers              ClusterIP   None           <none>        9091/TCP,9092/TCP,9093/TCP   78s
-    service/strimzi-cluster-kafka-external-bootstrap   NodePort    10.3.251.170   <none>        9094:31433/TCP               77s
-    service/strimzi-cluster-zookeeper-client           ClusterIP   10.3.243.23    <none>        2181/TCP                     2m19s
-    service/strimzi-cluster-zookeeper-nodes            ClusterIP   None           <none>        2181/TCP,2888/TCP,3888/TCP   2m19s
+    NAME                                                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+    service/prod-strimzi-cluster-kafka-0                    NodePort    10.3.241.135   <none>        9094:31824/TCP               77s
+    service/prod-strimzi-cluster-kafka-1                    NodePort    10.3.255.134   <none>        9094:31819/TCP               78s
+    service/prod-strimzi-cluster-kafka-2                    NodePort    10.3.240.71    <none>        9094:31594/TCP               77s
+    service/prod-strimzi-cluster-kafka-bootstrap            ClusterIP   10.3.250.224   <none>        9091/TCP,9092/TCP,9093/TCP   78s
+    service/prod-strimzi-cluster-kafka-brokers              ClusterIP   None           <none>        9091/TCP,9092/TCP,9093/TCP   78s
+    service/prod-strimzi-cluster-kafka-external-bootstrap   NodePort    10.3.251.170   <none>        9094:31433/TCP               77s
+    service/prod-strimzi-cluster-zookeeper-client           ClusterIP   10.3.243.23    <none>        2181/TCP                     2m19s
+    service/prod-strimzi-cluster-zookeeper-nodes            ClusterIP   None           <none>        2181/TCP,2888/TCP,3888/TCP   2m19s
     ```
 
    - check topics, since we also have a yaml spec defining our topic(s)
@@ -192,7 +203,7 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     --image=strimzi/kafka:0.20.0-rc1-kafka-2.6.0 \
     --rm=true \
     --restart=Never \
-    -- bin/kafka-topics.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list | grep "my-"
+    -- bin/kafka-topics.sh --bootstrap-server prod-strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list | grep "my-"
     ```
 
     provides the (expected) output of exactly one topic, "my-first-topic":
