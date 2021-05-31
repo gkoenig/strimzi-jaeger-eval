@@ -4,10 +4,10 @@ metadata:
   name: strimzi-cluster
 spec:
   kafka:
-    replicas: 4
+    replicas: 3
     config:
       offsets.topic.replication.factor: 2
       transaction.state.log.replication.factor: 2
-      transaction.state.log.min.isr: 2
-      auto.create.topics.enable: false
+      transaction.state.log.min.isr: 1
+      auto.create.topics.enable: true
       
