@@ -3,5 +3,5 @@ kind: Kafka
 metadata:
   name: strimzi-cluster
 spec:
-  kafka:
+  zookeeper:
     replicas: 3

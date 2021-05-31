@@ -5,4 +5,5 @@ bases:
 namespace: kafka-cluster
 namePrefix: prod-
 patchesStrategicMerge:
-- replicas-patch.yaml
+- kafka-config-patch.yaml
+- zookeeper-config-patch.yaml
