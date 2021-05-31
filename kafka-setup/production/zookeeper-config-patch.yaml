@@ -4,4 +4,4 @@ metadata:
   name: strimzi-cluster
 spec:
   zookeeper:
-    replicas: 3
+    replicas: 1
