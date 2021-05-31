@@ -4,5 +4,3 @@ kind: Deployment
 metadata:
   annotations:
     flux.weave.works/automated: "true"
-  name: testing-kafka
-  namespace: testing
