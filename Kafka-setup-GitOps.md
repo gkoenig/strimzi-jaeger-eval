@@ -77,19 +77,19 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     ```
 
     ```bash
-    flux create source git strimzi-jaeger-eval \
-    --url=https://github.com/gkoenig/strimzi-jaeger-eval \
-    --branch=main \
-    --interval=30s \
-    --export > ./my-flux/strimzi-jaeger-eval-source.yaml
-    ```
-
-    ```bash
     flux create source git strimzi-jaeger-eval-testing \
     --url=https://github.com/gkoenig/strimzi-jaeger-eval \
     --branch=testing \
     --interval=30s \
     --export > ./my-flux/strimzi-jaeger-eval-testing-branch-source.yaml
+    ```
+
+    ```bash
+    flux create source git strimzi-jaeger-eval-main \
+    --url=https://github.com/gkoenig/strimzi-jaeger-eval \
+    --branch=main \
+    --interval=30s \
+    --export > ./my-flux/strimzi-jaeger-eval-main-branch-source.yaml
     ```
 
 4. commit and push the -source.yaml
@@ -102,13 +102,13 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
 5. now that we have only the info about the source git repo configure, let's actually deploy an "application". Flux offers different template mechanisms for that (helm, kustomize, plain yaml manifests,..). We'll use _kustomize_. The corresponding kustomize yaml is located in folder _kafka-setup_ under the referenced Git repository (the strimzi-jaeger-eval one)
   
     ```bash
-    flux create kustomization strimzi-jaeger-eval \
-    --source=strimzi-jaeger-eval \
-    --path="./kafka-setup" \
+    flux create kustomization strimzi-jaeger-eval-prod-kustomization \
+    --source=strimzi-jaeger-eval-testing \
+    --path="./kafka-setup/production" \
     --prune=true \
     --validation=client \
     --interval=5m \
-    --export > ./my-flux/strimzi-jaeger-eval-kustomization.yaml
+    --export > ./my-flux/strimzi-jaeger-eval-prod-kustomization.yaml
     ```
   
     ```bash
@@ -130,7 +130,8 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
         │   ├── gotk-components.yaml
         │   ├── gotk-sync.yaml
         │   └── kustomization.yaml
-        ├── strimzi-jaeger-eval-kustomization.yaml
+        ├── strimzi-jaeger-eval-testing-kustomization.yaml
+        ├── strimzi-jaeger-eval-prod-kustomization.yaml
         ├── strimzi-jaeger-eval-testing-branch-source.yaml
         └── strimzi-jaeger-eval-source.yaml
 
