@@ -58,6 +58,7 @@ The operator will be installed into namespace _kafka-op_ and the Kafka cluster i
 ```bash
 kubectl create ns kafka-op
 kubectl create ns kafka-cluster
+kubectl create ns testing
 wget https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.22.1/strimzi-0.22.1.tar.gz
 tar -xvzf strimzi-0.22.1.tar.gz
 cd strimzi-0.22.1
@@ -76,7 +77,7 @@ Open file 060-Deployment-strimzi-cluster-operator.yaml (under install/cluster-op
 ```bash
           env:
             - name: STRIMZI_NAMESPACE
-              value: kafka-cluster
+              value: kafka-cluster,testing
 ```
 
 Create rolebindings for our desired namespace:
@@ -85,6 +86,9 @@ Create rolebindings for our desired namespace:
 kubectl apply -f install/cluster-operator/020-RoleBinding-strimzi-cluster-operator.yaml -n kafka-cluster
 kubectl apply -f install/cluster-operator/031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml -n kafka-cluster
 kubectl apply -f install/cluster-operator/032-RoleBinding-strimzi-cluster-operator-topic-operator-delegation.yaml -n kafka-cluster
+kubectl apply -f install/cluster-operator/020-RoleBinding-strimzi-cluster-operator.yaml -n testing
+kubectl apply -f install/cluster-operator/031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml -n testing
+kubectl apply -f install/cluster-operator/032-RoleBinding-strimzi-cluster-operator-topic-operator-delegation.yaml -n testing
 ```
 
 ### finally deploy the Strimzi operator
