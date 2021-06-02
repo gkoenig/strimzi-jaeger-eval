@@ -233,9 +233,10 @@ We will do it one by one, starting with creating the Kafka cluster in namespace 
 
     ```bash
     #first by listing the Strimzi resource 'kafkatopic'
-    kubectl get kafkatopics -n kafka-cluster | grep 'my-'
+    kubectl get kafkatopics -n testing | grep 'my-'
     
-    my-first-topic                       strimzi-cluster        5            2
+    #output
+    my-first-topic                   testing-strimzi-cluster   2            1                    True
     ```
 
     ```bash
@@ -244,13 +245,12 @@ We will do it one by one, starting with creating the Kafka cluster in namespace 
     --image=strimzi/kafka:0.20.0-rc1-kafka-2.6.0 \
     --rm=true \
     --restart=Never \
-    -- bin/kafka-topics.sh --bootstrap-server prod-strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list | grep "my-"
-    ```
+    -- bin/kafka-topics.sh --bootstrap-server testing-strimzi-cluster-kafka-bootstrap.testing:9092 --list | grep "my-"
+    
+    #provides the (expected) output of exactly one topic, "my-first-topic":
 
-    provides the (expected) output of exactly one topic, "my-first-topic":
-
-    ```bash
     If you don't see a command prompt, try pressing enter.
+    
     my-first-topic
     ```
 
