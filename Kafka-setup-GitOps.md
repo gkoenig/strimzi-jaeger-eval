@@ -22,7 +22,7 @@ The base configuration for the Kafka cluster is in folder _strimzi-jaeger-eval/k
    export GITHUB_TOKEN=<your GitHub token>
    ```
 
-2. install Flux (on Linux): ```curl -s https://fluxcd.io/install.sh | sudo bash``` (at time of writing this doc, I got v 0.13.4 installed)  
+2. install Flux (on Linux): ```curl -s https://fluxcd.io/install.sh | sudo bash``` (at time of writing this doc, I got v 0.14.1 installed)  
   or grab a binary release from [here](https://github.com/fluxcd/flux2/releases)
 
 3. verify that the K8s cluster and tools are covering Flux prerequisites
@@ -101,17 +101,8 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     git push
     ```
 
-5. now that we have only the info about the source git repo configure, let's actually deploy an "application". Flux offers different template mechanisms for that (helm, kustomize, plain yaml manifests,..). We'll use _kustomize_. The corresponding kustomize yaml is located in folder _kafka-setup_ under the referenced Git repository (the strimzi-jaeger-eval one)
-  
-    ```bash
-    flux create kustomization strimzi-jaeger-eval-prod-kustomization \
-    --source=strimzi-jaeger-eval-main \
-    --path="./kafka-setup/production" \
-    --prune=true \
-    --validation=client \
-    --interval=5m \
-    --export > ./my-flux/strimzi-jaeger-eval-prod-kustomization.yaml
-    ```
+5. now that we have only the info about the source git repo configure, let's actually deploy an "application", which is basically a Strimzi Kafka cluster here. Flux offers different template mechanisms for that (helm, kustomize, plain yaml manifests,..). We'll use _kustomize_. The corresponding kustomize yaml is located in folder _kafka-setup_ under the referenced Git repository (the strimzi-jaeger-eval one). Let's create the flux-kustomization for both our environments, _production_ and _testing_ .  
+We will do it one by one, starting with creating the Kafka cluster in namespace _testing_ , waiting until all resources are up, then do the same for namespace _kafka-cluster_. Reason for that is, that I ran into weird errors (maybe race conditions) by creating both clusters in parallel,  means by pushing both kustomizations together to let kafka-setup/production and kafka-setup/testing being creatd in parallel.
   
     ```bash
     flux create kustomization strimzi-jaeger-eval-testing-kustomization \
@@ -133,20 +124,15 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
         │   ├── gotk-sync.yaml
         │   └── kustomization.yaml
         ├── strimzi-jaeger-eval-testing-kustomization.yaml
-        ├── strimzi-jaeger-eval-prod-kustomization.yaml
         └── strimzi-jaeger-eval-main-branch-source.yaml
     ```
 
-6. commit and push the -source.yaml
+    ```bash
+    git add -A && git commit -m "created Kustomization for kafka-cluster in testing namespace"
+    git push
+    ```
 
-  ```bash
-  git add -A && git commit -m "created Kustomization for kafka-setup"
-  git push
-  ```
-
-7. now check your cluster for ongoing progress: zookeeper and kafka deployments/service creation
-
-   - Flux reconsiliation (==checking that target state is equal to Git)
+    - Flux reconsiliation (==checking that target state is equal to Git)
 
     ```bash
     watch flux get kustomizations
@@ -157,7 +143,6 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     ```bash
     NAME                                       READY   MESSAGE                                                         REVISION
     flux-system                                True    Applied revision: main/80655111cfe968f1bf37c1e9a8e639af7c1fb2eb main/80655111cfe968f1bf37c1e9a8e639af7c1fb2eb
-    strimzi-jaeger-eval-prod-kustomization     True    Applied revision: main/7b83b08a58ec359accd9001ea66d28f112f52a5c main/7b83b08a58ec359accd9001ea66d28f112f52a5c
     strimzi-jaeger-eval-testing-kustomization  True    Applied revision: main/7b83b08a58ec359accd9001ea66d28f112f52a5c main/7b83b08a58ec359accd9001ea66d28f112f52a5c
     ```
 
@@ -165,36 +150,96 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
 
    - Kafka and Zookeeper resources
 
-    wait a couple of minutes....and amazingly, you'll see that they got created, e.g. our "production" cluster in namespace "kafka-cluster":
+    wait a couple of minutes....and amazingly, you'll see that they got created, e.g. our "testing" cluster in namespace "testing":
 
     ```bash
-    kubectl get po,service -n kafka-cluster
+    kubectl get po,service -n testing
     ```
 
     ```bash
-    NAME                                                        READY   STATUS    RESTARTS   AGE
-    pod/prod-strimzi-cluster-entity-operator-76c8846964-gfrrw   3/3     Running   0          61s
-    pod/prod-strimzi-cluster-kafka-0                            1/1     Running   0          2m9s
-    pod/prod-strimzi-cluster-kafka-1                            1/1     Running   0          2m8s
-    pod/prod-strimzi-cluster-kafka-2                            1/1     Running   0          2m8s
-    pod/prod-strimzi-cluster-zookeeper-0                        1/1     Running   0          2m45s
+    NAME                                                           READY   STATUS    RESTARTS   AGE
+    pod/testing-strimzi-cluster-entity-operator-5db67f65fc-8pmjl   3/3     Running   0          14m
+    pod/testing-strimzi-cluster-kafka-0                            1/1     Running   0          15m
+    pod/testing-strimzi-cluster-kafka-1                            1/1     Running   0          15m
+    pod/testing-strimzi-cluster-zookeeper-0                        1/1     Running   0          15m
+
+    NAME                                                       TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+    service/testing-strimzi-cluster-kafka-0                    NodePort    10.3.253.25    <none>        9094:31681/TCP               15m
+    service/testing-strimzi-cluster-kafka-1                    NodePort    10.3.250.98    <none>        9094:31002/TCP               15m
+    service/testing-strimzi-cluster-kafka-bootstrap            ClusterIP   10.3.252.94    <none>        9091/TCP,9092/TCP,9093/TCP   15m
+    service/testing-strimzi-cluster-kafka-brokers              ClusterIP   None           <none>        9091/TCP,9092/TCP,9093/TCP   15m
+    service/testing-strimzi-cluster-kafka-external-bootstrap   NodePort    10.3.243.213   <none>        9094:30321/TCP               15m
+    service/testing-strimzi-cluster-zookeeper-client           ClusterIP   10.3.249.78    <none>        2181/TCP                     15m
+    service/testing-strimzi-cluster-zookeeper-nodes            ClusterIP   None           <none>        2181/TCP,2888/TCP,3888/TCP   15m
+    ```
+
+6. now let the production kafka cluster be created
+
+    ```bash
+    # create flux kustomization
+    flux create kustomization strimzi-jaeger-eval-prod-kustomization \
+    --source=strimzi-jaeger-eval-main \
+    --path="./kafka-setup/production" \
+    --prune=true \
+    --validation=client \
+    --interval=5m \
+    --export > ./my-flux/strimzi-jaeger-eval-prod-kustomization.yaml
+
+    # push it to flux repo
+    git add -A && git commit -m "created Kustomization for kafka-cluster in kafka-cluster namespace"
+    git push
+    
+    # wait some minutes until all pods are up and running
+    kubectl get po,svc -n kafka-cluster
+
+    NAME                                                       READY   STATUS    RESTARTS   AGE
+    pod/prod-strimzi-cluster-entity-operator-cbf979547-28gqx   3/3     Running   0          13m
+    pod/prod-strimzi-cluster-kafka-0                           1/1     Running   0          14m
+    pod/prod-strimzi-cluster-kafka-1                           1/1     Running   0          14m
+    pod/prod-strimzi-cluster-kafka-2                           1/1     Running   0          14m
+    pod/prod-strimzi-cluster-zookeeper-0                       1/1     Running   0          14m
 
     NAME                                                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
-    service/prod-strimzi-cluster-kafka-0                    NodePort    10.3.252.18    <none>        9094:31624/TCP               2m9s
-    service/prod-strimzi-cluster-kafka-1                    NodePort    10.3.247.117   <none>        9094:31934/TCP               2m9s
-    service/prod-strimzi-cluster-kafka-2                    NodePort    10.3.245.166   <none>        9094:30962/TCP               2m9s
-    service/prod-strimzi-cluster-kafka-bootstrap            ClusterIP   10.3.240.112   <none>        9091/TCP,9092/TCP,9093/TCP   2m9s
-    service/prod-strimzi-cluster-kafka-brokers              ClusterIP   None           <none>        9091/TCP,9092/TCP,9093/TCP   2m9s
-    service/prod-strimzi-cluster-kafka-external-bootstrap   NodePort    10.3.253.193   <none>        9094:32689/TCP               2m9s
-    service/prod-strimzi-cluster-zookeeper-client           ClusterIP   10.3.254.43    <none>        2181/TCP                     2m46s
-    service/prod-strimzi-cluster-zookeeper-nodes            ClusterIP   None           <none>        2181/TCP,2888/TCP,3888/TCP   2m46s
+    service/prod-strimzi-cluster-kafka-0                    NodePort    10.3.243.78    <none>        9094:31145/TCP               14m
+    service/prod-strimzi-cluster-kafka-1                    NodePort    10.3.248.151   <none>        9094:30991/TCP               14m
+    service/prod-strimzi-cluster-kafka-2                    NodePort    10.3.254.35    <none>        9094:31685/TCP               14m
+    service/prod-strimzi-cluster-kafka-bootstrap            ClusterIP   10.3.252.128   <none>        9091/TCP,9092/TCP,9093/TCP   14m
+    service/prod-strimzi-cluster-kafka-brokers              ClusterIP   None           <none>        9091/TCP,9092/TCP,9093/TCP   14m
+    service/prod-strimzi-cluster-kafka-external-bootstrap   NodePort    10.3.243.118   <none>        9094:32405/TCP               14m
+    service/prod-strimzi-cluster-zookeeper-client           ClusterIP   10.3.249.122   <none>        2181/TCP                     14m
+    service/prod-strimzi-cluster-zookeeper-nodes            ClusterIP   None           <none>        2181/TCP,2888/TCP,3888/TCP   14m
     ```
 
-   - check topics, since we also have a yaml spec defining our topic(s)
+7.  Let's create a topic
 
-    Within file kafka-setup/base/topics.yaml we specified that we want to have a topic called "my-first-topic". Let's see if it is there:
+    The same mechanism as before applies also to the topic creation. In the Git repo there are dedicated directories for _production_ and _testing_ , because topic configurations will differ between environments and you'll find the according .yaml files in the corresponding subdirectories per environment. Let's also create flux-kustomizations to observe changes to those topic configuration files.
+
+    
+    ```bash
+    flux create kustomization kafkatopic-testing-kustomization \
+    --source=strimzi-jaeger-eval-main \
+    --path="./kafka-topics/testing" \
+    --prune=true \
+    --validation=client \
+    --depends-on 'strimzi-jaeger-eval-testing-kustomization' \
+    --interval=5m \
+    --export > ./my-flux/kafkatopic-testing-kustomization.yaml
+    
+    git add -A && git commit -m "created Kustomization for kafka-topics in namespace testing"
+    git push
+    ```
+    
+    **now let's list the topics, and grep for our custom topic starting with 'my-'**
 
     ```bash
+    #first by listing the Strimzi resource 'kafkatopic'
+    kubectl get kafkatopics -n kafka-cluster | grep 'my-'
+    
+    my-first-topic                       strimzi-cluster        5            2
+    ```
+
+    ```bash
+    #second, by calling the Kafka API directly, means by executing kafka cli tool
     kubectl run kafka-producer -ti \
     --image=strimzi/kafka:0.20.0-rc1-kafka-2.6.0 \
     --rm=true \
@@ -208,4 +253,22 @@ The goal is, to have the yaml manifests within [kafka-setup](./kafka-setup) bein
     If you don't see a command prompt, try pressing enter.
     my-first-topic
     ```
+
+    **Now let's do the same for namespace _kafka-cluster_ , our "production"**
+
+    ```bash
+    flux create kustomization kafkatopic-prod-kustomization \
+    --source=strimzi-jaeger-eval-main \
+    --path="./kafka-topics/production" \
+    --prune=true \
+    --validation=client \
+    --interval=5m \
+    --depends-on 'strimzi-jaeger-eval-prod-kustomization' \
+    --export > ./my-flux/kafkatopic-prod-kustomization.yaml
+
+    git add -A && git commit -m "created Kustomization for kafka-topics in namespace kafka-cluster"
+    git push
+    
+    ```
+  
 

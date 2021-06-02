@@ -3,7 +3,5 @@ kind: KafkaTopic
 metadata:
   name: my-first-topic
   labels:
-    strimzi.io/cluster: prod-strimzi-cluster
-spec:
-  replicas: 2
-  partitions: 5    
+    strimzi.io/cluster: testing-strimzi-cluster
+    
