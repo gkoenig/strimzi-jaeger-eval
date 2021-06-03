@@ -6,4 +6,11 @@ metadata:
     strimzi.io/cluster: prod-strimzi-cluster
 spec:
   replicas: 2
-  partitions: 5    
+  partitions: 5
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: just-a-test
+  labels:
+    strimzi.io/cluster: prod-strimzi-cluster

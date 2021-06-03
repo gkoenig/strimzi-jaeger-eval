@@ -25,11 +25,11 @@ Now that Kafka is up and running, let's create a topic within production cluster
 The base topic configuration is specified in ```./kafka-topics/base/topics.yaml```. You can adjust base properties there, or overwrite settings for your desired environment in the corresponding folder ```./kafka-topics/testing``` / ```./kafka-topics/production``` in file ```kafkatopic-config-patch.yaml```.
 
 ```bash
-kubectl apply -k -f ./kafka-topics/production
+kubectl apply -k ./kafka-topics/production
 ```
 
 ....and , of course, we can do the same for the _testing_ cluster:
 
 ```bash
-kubectl apply -k -f ./kafka-topics/testing
+kubectl apply -k ./kafka-topics/testing
 ```

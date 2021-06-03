@@ -4,4 +4,10 @@ metadata:
   name: my-first-topic
   labels:
     strimzi.io/cluster: testing-strimzi-cluster
-    
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: just-a-test
+  labels:
+    strimzi.io/cluster: testing-strimzi-cluster
