@@ -21,14 +21,15 @@ Check: ```kubectl get all -n kafka-cluster```
 
 **Creating a topic**
 
-Now that Kafka is up and running, let's create a topic within production cluster in namespace _kafka-cluster_ , by using the TopicOperator
+Now that Kafka is up and running, let's create a topic within production cluster in namespace _kafka-cluster_ , by using the TopicOperator.  
+The base topic configuration is specified in ```./kafka-topics/base/topics.yaml```. You can adjust base properties there, or overwrite settings for your desired environment in the corresponding folder ```./kafka-topics/testing``` / ```./kafka-topics/production``` in file ```kafkatopic-config-patch.yaml```.
 
 ```bash
-kubectl apply -n kafka-cluster -f ./kafka-setup/base/topics.yaml
+kubectl apply -k -f ./kafka-topics/production
 ```
 
 ....and , of course, we can do the same for the _testing_ cluster:
 
 ```bash
-kubectl apply -n testing -f ./kafka-setup/base/topics.yaml
+kubectl apply -k -f ./kafka-topics/testing
 ```

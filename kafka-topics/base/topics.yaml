@@ -10,3 +10,13 @@ spec:
   config:
     retention.ms: 7200000
     segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: just-a-test
+spec:
+  partitions: 1
+  replicas: 1
+  config:
+    retention.ms: 600000 # setting very low retention of 10min
