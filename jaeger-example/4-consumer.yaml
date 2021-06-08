@@ -19,7 +19,7 @@ spec:
           image: quay.io/strimzi-examples/java-kafka-consumer:latest
           env:
             - name: BOOTSTRAP_SERVERS
-              value: strimzi-cluster-kafka-bootstrap.testing:9092
+              value: testing-strimzi-cluster-kafka-bootstrap.testing:9092
             - name: TOPIC
               value: my-topic-reversed
             - name: GROUP_ID
