@@ -230,7 +230,7 @@ The only thing we have to do, is to register a new "app" in Flux, to observe and
 
   ```bash
   flux create kustomization jaeger-example \
-  --source=strimzi-jaeger-eval \
+  --source=strimzi-jaeger-eval-main \
   --path="./jaeger-example" \
   --prune=true \
   --validation=client \
