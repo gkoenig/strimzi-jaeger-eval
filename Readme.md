@@ -118,10 +118,12 @@ kubectl run kafka-producer -ti \
     --image=strimzi/kafka:0.20.0-rc1-kafka-2.6.0 \
     --rm=true \
     --restart=Never \
-    -- bin/kafka-topics.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --list
+    -- bin/kafka-topics.sh --bootstrap-server testing-strimzi-cluster-kafka-bootstrap.testing:9092 --list
 ```
 
 ## Producing/Consuming messages
+
+...in -testing- Kafka cluster.  
 
 Start a Producer:
 
@@ -129,7 +131,7 @@ Start a Producer:
 kubectl run kafka-producer -ti \
   --image=strimzi/kafka:latest-kafka-2.4.0 \
   --rm=true --restart=Never \
-  -- bin/kafka-console-producer.sh --broker-list strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --topic my-first-topic
+  -- bin/kafka-console-producer.sh --broker-list testing-strimzi-cluster-kafka-bootstrap.testing:9092 --topic my-first-topic
 ```
 
 and in another terminal, start a Consumer:
@@ -138,7 +140,7 @@ and in another terminal, start a Consumer:
 kubectl run kafka-consumer -ti \
   --image=strimzi/kafka:latest-kafka-2.4.0 \
   --rm=true --restart=Never \
-  -- bin/kafka-console-consumer.sh --bootstrap-server strimzi-cluster-kafka-bootstrap.kafka-cluster:9092 --topic my-first-topic --from-beginning
+  -- bin/kafka-console-consumer.sh --bootstrap-server testing-strimzi-cluster-kafka-bootstrap.testing:9092 --topic my-first-topic --from-beginning
 ```
 
 ## Jager
