@@ -5,3 +5,4 @@ resources:
   - 2-producer.yaml
   - 3-kafka-streams.yaml
   - 4-consumer.yaml
+namespace: testing  
