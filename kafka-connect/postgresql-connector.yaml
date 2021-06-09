@@ -1,0 +1,25 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: inventory-connector  
+  namespace: kafka-cluster
+  labels: 
+    strimzi.io/cluster: my-connect-cluster
+spec:
+  class: io.debezium.connector.postgresql.PostgresConnector
+  tasksMax: 1  
+  config:  
+    database.hostname: postgres.default 
+    database.port: 5432
+    database.user: dbuser
+    database.password: dbpasswd
+    database.dbname: inventory
+    database.server.name: inventorydb   
+    table.include.list: public.products
+    plugin.name: pgoutput
+    topic.creation.enable: true
+    topic.creation.default.replication.factor: 1
+    topic.creation.default.partitions: 1
+    topic.creation.default.cleanup.policy: compact
+    topic.creation.default.compression.type: lz4
+    decimal.handling.mode: double
