@@ -15,10 +15,11 @@ spec:
     database.password: dbpasswd
     database.dbname: inventory
     database.server.name: inventorydb   
-    database.whitelist: public.inventory
+    table.include.list: public.products
     plugin.name: pgoutput
     topic.creation.enable: true
     topic.creation.default.replication.factor: 1
     topic.creation.default.partitions: 1
     topic.creation.default.cleanup.policy: compact
     topic.creation.default.compression.type: lz4
+    decimal.handling.mode: double

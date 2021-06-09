@@ -17,8 +17,26 @@ spec:
     trustedCertificates:
       - secretName: prod-strimzi-cluster-cluster-ca-cert
         certificate: ca.crt
+  tracing:
+    type: jaeger
   config:
     group.id: connect-cluster
     offset.storage.topic: connect-cluster-offsets
     config.storage.topic: connect-cluster-configs
     status.storage.topic: connect-cluster-status
+    key.converter: org.apache.kafka.connect.json.JsonConverter
+    value.converter: org.apache.kafka.connect.json.JsonConverter
+    key.converter.schemas.enable: true
+    value.converter.schemas.enable: true
+  template:
+    connectContainer:
+      env:
+        - name: JAEGER_SERVICE_NAME
+          value: kafka-connect
+        - name: JAEGER_AGENT_HOST
+          value: my-jaeger-agent.default
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
+    

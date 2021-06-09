@@ -23,11 +23,6 @@ I will also show you how to apply **GitOps** approach of bringing applications/c
     - [Manual approach, executing _kubectl_](#manual-approach-executing-kubectl)
     - [GitOps approach](#gitops-approach)
   - [Kafka Connect](#kafka-connect)
-    - [Deploy&prepare Postgresql](#deployprepare-postgresql)
-      - [Postgresql deployment](#postgresql-deployment)
-      - [Create db and table](#create-db-and-table)
-    - [Deploy KafkaConnect](#deploy-kafkaconnect)
-    - [Deploy Connector](#deploy-connector)
 
 ## base GCP setup
 
@@ -257,67 +252,5 @@ You can click on one of those traces to further dive into the details, e.g.:
 ## Kafka Connect
 
 Now that the base Kafka cluster and Jaeger is setup, let's enrich the platform by adding Kafka Connect....and a Connector to read data from Postgresql to Kafka.
+You'll find the instructions/docu on page [KafkaConnect-Debezium-Postgresql](KafkaConnect-Debezium-Postgresql.md)
 
-### Deploy&prepare Postgresql
-
-First we deploy a Postgresql db, which serves as source for our Connector. We'll only run one Postgresql instance, no HA , since the focus of this setup is on _Tracing_ and not on deploying HA RDBMS on K8s.
-Since the Kubernetes cluster is setup in GKE, I will use the storageclass _standard_ which is available by default. Please adjust this if you are running Kubernetes on a different provider or locally on your workstation via microk8s , k3s , etc.
-
-#### Postgresql deployment
-
-Inspect the yaml manifest [here](./kafka-connect/postgresql.yaml)  
-and apply it via ```kubectl apply -f kafka-connect/postgresql.yaml```
-
-Afterwards check the status of the Postgresql pod via: ```kubectl get pod -l app=postgres```
-
-#### Create db and table
-
-use the following command to enter a prompt within the Postgresql database. The db user + password are hardcoded (check the spec in [postgresql.yaml](kafka-connect/postgresql.yaml), they need to match.). Of course this is not according security best practices, but good enough for a quick demo. A more secure approach would be to e.g. put the credentials into a Kubernetes secret object.
-
-```bash
-kubectl run postgres-postgresql-client --rm --tty -i --restart='Never' --image docker.io/bitnami/postgresql:11.9.0-debian-10-r48 --env="PGPASSWORD=dbpasswd" --command -- psql --host postgres -U dbuser -d postgres -p 5432
-```
-
-Then create a database, a table and insert some data:
-
-```
-postgres=# CREATE DATABASE inventory;
-postgres=# \c inventory;
-inventory=# CREATE TABLE products (product_no integer, name text, price numeric);
-inventory=# INSERT INTO products VALUES (1, 'Cheese', 9.99);
-inventory=# INSERT INTO products VALUES (2, 'Beer', 5.99);
-inventory=# INSERT INTO products VALUES (3, 'Salmon', 29.99);
-
-```
-
-
-### Deploy KafkaConnect
-
-We first need to build a container, which includes the Postgresql Debezium driver, so that we actually can point our KafkaConnect connector to the Postgresql database. This step is **optional**, you can also simply go ahead and apply the yaml manifest (which is referring to the container image within my DockerHub account).
-
-- grab the Postgresql driver archive 
-```
-curl https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/1.5.0.Final/debezium-connector-postgres-1.5.0.Final-plugin.tar.gz | tar xvz
-```
-- create Dockerfile to build the container
-```
-cat <<EOF >Dockerfile
-FROM docker.io/strimzi/kafka:0.16.1-kafka-2.4.0
-USER root:root
-RUN mkdir -p /opt/kafka/plugins/debezium
-COPY ./debezium-connector-postgres/ /opt/kafka/plugins/debezium/
-USER 1001
-EOF
-```
-- build the image and upload it to e.g. DockerHub (you can also use any other container repository, of course).
-```
-# if not logged in into dockerhub, execute: ```docker login docker.io``` first
-export DOCKER_ORG=gkoenig
-docker build . -t ${DOCKER_ORG}/connect-debezium
-docker push ${DOCKER_ORG}/connect-debezium
-```
-
-Inspect the yaml manifest [here](./kafka-connect/kafka-connect.yaml)  
-and apply it via ```kubectl apply -f kafka-connect/kafka-connect.yaml```
-
-### Deploy Connector
